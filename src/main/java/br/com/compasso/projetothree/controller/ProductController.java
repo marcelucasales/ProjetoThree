@@ -7,6 +7,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +24,11 @@ import br.com.compasso.projetothree.dto.ProductStatus;
 import br.com.compasso.projetothree.form.ProductForm;
 import br.com.compasso.projetothree.model.Product;
 import br.com.compasso.projetothree.repository.ProductRepository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
+@Api(value = "Api rest produtos")
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/products")
 public class ProductController {
@@ -34,6 +39,7 @@ public class ProductController {
     @Autowired
     private ProductRepository repository;
 
+    @ApiOperation(value = "Cria um produto no banco de dados.")
     @PostMapping
     @Transactional
     public ResponseEntity<ProductDto> cadastra(@Valid @RequestBody ProductForm form, UriComponentsBuilder u) {
@@ -45,6 +51,7 @@ public class ProductController {
         return ResponseEntity.created(uri).body(new ProductDto(p.getId(), p.getName(), p.getDescription(), p.getPrice()));
     }
 
+    @ApiOperation(value = "Altera um produto específico no banco de dados.")
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<ProductDto> altera(@PathVariable("id") String id, @Valid @RequestBody ProductForm form) {
@@ -59,6 +66,7 @@ public class ProductController {
         return ResponseEntity.notFound().build();
     }
 
+    @ApiOperation(value = "Busca um produto específico no banco de dados.")
     @GetMapping("{id}")
     public ResponseEntity<ProductDto> listar(@PathVariable("id") String id) {
         if(repository.findById(id).isPresent()) {
@@ -67,16 +75,19 @@ public class ProductController {
         return ResponseEntity.notFound().build();
     }
 
+    @ApiOperation(value = "Lista os produtos que estão no banco de dados.")
     @GetMapping
     public List<ProductDto> listar() {
         return Product.toDto(repository.findAll());
     }
 
+    @ApiOperation(value = "Lista os produtos que estão no banco de dados através de um filtro.")
     @GetMapping("/search")
     public List<ProductDto> listar(@RequestParam(value = "min_price", defaultValue = "0") Double min_price, @RequestParam(value = "max_price", defaultValue = "99999999999999999") Double max_price, @RequestParam(value = "q", defaultValue = "") String q) {
         return Product.toDto(this.repository.search(min_price, max_price, q));
     }    
 
+    @ApiOperation(value = "Remove um produto específico que está no banco de dados.")
     @DeleteMapping("{id}")
     @Transactional
     public ResponseEntity<?> deletar(@PathVariable("id") String id) {
